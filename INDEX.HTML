@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📈 실시간 트렌드 분석</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#080f1e;color:#e2e8f0;min-height:100vh;padding:24px}
+/* 헤더 */
+.hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px}
+h1{font-size:21px;font-weight:800;color:#f1f5f9}
+.sub{font-size:11px;color:#475569;margin-top:4px}
+.tabs{display:flex;gap:5px;background:#0f172a;padding:4px;border-radius:12px;border:1px solid #1e293b}
+.tab{padding:5px 14px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:#64748b;transition:all .2s}
+.tab.on{background:#6366f1;color:#fff}
+/* 국가 */
+.section-label{font-size:11px;color:#475569;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.country-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.bc{padding:7px 14px;border-radius:10px;border:2px solid #1e293b;background:#0f172a;color:#64748b;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+.bc.on{border-color:#6366f1;background:#1e1b4b;color:#a5b4fc}
+/* 플랫폼 */
+.platform-row{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.pc{padding:7px 16px;border-radius:10px;border:2px solid #1e293b;background:#0f172a;color:#64748b;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:6px}
+.pc.on{color:#fff}
+/* 실행 */
+.go-row{display:flex;justify-content:flex-end;margin-bottom:16px}
+.go{padding:9px 22px;border-radius:11px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;cursor:pointer;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px #6366f133}
+.go:disabled{opacity:.5;cursor:not-allowed}
+/* 프로그레스 */
+.prog{display:none;margin-bottom:14px}
+.pb{height:3px;background:#1e293b;border-radius:4px;overflow:hidden}
+.pf{height:100%;width:40%;border-radius:4px;animation:slide 1.4s ease-in-out infinite}
+.pl{font-size:12px;margin-top:5px;font-weight:600}
+.err{background:#1a0505;border:1px solid #7f1d1d;border-radius:12px;padding:13px;color:#fca5a5;margin-bottom:14px;font-size:13px;display:none}
+/* 그리드 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:13px;margin-bottom:14px}
+/* 카드 */
+.card{background:#0f172a;border-radius:14px;border:1px solid #1e293b;overflow:hidden;animation:fi .25s ease both}
+.card-header{padding:14px 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1a2540}
+.rk-wrap{position:relative;flex-shrink:0}
+.rk{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px}
+.medal{position:absolute;top:-5px;right:-5px;font-size:10px}
+.kw-wrap{flex:1;min-width:0}
+.kw{font-weight:700;font-size:14px;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.meta-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.vol-badge{font-size:10px;font-weight:600;background:#1a2540;color:#60a5fa;padding:2px 8px;border-radius:20px}
+.src-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+/* 인사이트 */
+.ins-wrap{padding:13px 16px;display:flex;flex-direction:column;gap:10px}
+.news-item{display:flex;gap:9px;align-items:flex-start}
+.news-num{width:18px;height:18px;border-radius:5px;background:#1a2540;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#60a5fa;flex-shrink:0;margin-top:1px}
+.news-body{flex:1;min-width:0}
+.news-title{font-size:12px;color:#cbd5e1;line-height:1.55;margin-bottom:4px}
+.news-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.news-src{font-size:10px;color:#475569}
+.news-link{font-size:10px;color:#6366f1;text-decoration:none;font-weight:600}
+.news-link:hover{text-decoration:underline}
+.divider{height:1px;background:#1a2540}
+.no-news{font-size:12px;color:#334155;font-style:italic}
+/* 하단 */
+.sbar{background:#0f172a;border:1px solid #1e293b;border-radius:11px;padding:11px 16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;color:#64748b}
+.emp{text-align:center;padding:55px 0}
+.emp-icon{font-size:44px;margin-bottom:12px}
+.emp-text{font-size:14px;color:#334155}
+/* 히스토리 */
+.hi{background:#0f172a;border-radius:13px;padding:14px;margin-bottom:10px;border:1px solid #1e293b}
+.ht{background:#1e293b;border-radius:7px;padding:3px 9px;font-size:11px;display:inline-block;margin:2px}
+/* 스켈레톤 */
+.sk{background:#0f172a;border-radius:14px;border:1px solid #1e293b;overflow:hidden;animation:fi .25s ease both}
+.skb{background:#1e293b;border-radius:5px;animation:pulse 1.5s ease-in-out infinite}
+.sp{width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slide{0%{transform:translateX(-200%)}100%{transform:translateX(400%)}}
+</style></head><body>
+
+<div class="hd">
+  <div><h1>📈 실시간 트렌드 분석</h1><div class="sub" id="sub">Google Trends · Reddit · Bing News · 토큰 미사용</div></div>
+  <div class="tabs">
+    <button class="tab on" onclick="stab('live')">🔴 라이브</button>
+    <button class="tab" onclick="stab('hist')">📁 히스토리</button>
+  </div>
+</div>
+
+<div id="lp">
+  <div class="section-label">국가</div>
+  <div class="country-row" id="cgrid"></div>
+
+  <div class="section-label">플랫폼</div>
+  <div class="platform-row" id="pgrid"></div>
+
+  <div class="go-row">
+    <button class="go" id="go" onclick="run()">🔍 분석 시작</button>
+  </div>
+
+  <div class="prog" id="prog">
+    <div class="pb"><div class="pf" id="pfill"></div></div>
+    <div class="pl" id="pl"></div>
+  </div>
+  <div class="err" id="eb"></div>
+  <div class="grid" id="grid"></div>
+  <div id="stbar" style="display:none" class="sbar">
+    <span>🥇 <b id="t1" style="color:#f59e0b"></b></span>
+    <span>📊 총 <b id="tot" style="color:#94a3b8"></b>개</span>
+    <span id="src-label" style="margin-left:auto"></span>
+  </div>
+  <div class="emp" id="emp">
+    <div class="emp-icon">📡</div>
+    <div class="emp-text">국가와 플랫폼을 선택하고 분석 시작을 눌러주세요</div>
+  </div>
+</div>
+
+<div id="hp" style="display:none">
+  <div id="hl"><div class="emp"><div class="emp-icon">📂</div><div class="emp-text">기록이 없습니다</div></div></div>
+</div>
+
+<script>
+const PROXY = "https://kbsong.kibok86.workers.dev";
+const RC = ["#f59e0b","#9ca3af","#cd7c2f"];
+const MEDALS = ["🥇","🥈","🥉"];
+
+const COUNTRIES = [
+  {code:"KR", label:"🇰🇷 한국",   lang:"ko", reddit:"korea",       bing:"ko-KR"},
+  {code:"US", label:"🇺🇸 미국",   lang:"en", reddit:"news",        bing:"en-US"},
+  {code:"SA", label:"🇸🇦 사우디", lang:"ar", reddit:"saudiarabia", bing:"ar-SA"},
+  {code:"AE", label:"🇦🇪 UAE",    lang:"ar", reddit:"dubai",       bing:"ar-AE"},
+  {code:"EG", label:"🇪🇬 이집트", lang:"ar", reddit:"egypt",       bing:"ar-EG"},
+];
+
+const PLATFORMS = [
+  {id:"google", label:"🔍 Google Trends", color:"#6366f1", bg:"#1e1b4b", hint:"일일 검색량 기준"},
+  {id:"reddit", label:"🔺 Reddit",        color:"#ff4500", bg:"#2a1200", hint:"커뮤니티 핫 포스트"},
+  {id:"bing",   label:"📰 Bing News",     color:"#0ea5e9", bg:"#001a2e", hint:"최신 뉴스 헤드라인"},
+];
+
+// 한국(KR) 제외 모든 국가 → 한국어 번역
+let ST = {co:"KR", platform:"google", loading:false, hist:[]};
+
+function renderCountries(){
+  document.getElementById("cgrid").innerHTML = COUNTRIES.map(c =>
+    `<button class="bc${c.code===ST.co?" on":""}" onclick="selC('${c.code}')">${c.label}</button>`
+  ).join("");
+}
+function renderPlatforms(){
+  const el = document.getElementById("pgrid");
+  el.innerHTML = PLATFORMS.map(p => {
+    const on = p.id===ST.platform;
+    return `<button class="pc${on?" on":""}" onclick="selP('${p.id}')"
+      style="${on?`border-color:${p.color};background:${p.bg};color:${p.color}`:""}"
+    >${p.label}</button>`;
+  }).join("");
+}
+renderCountries(); renderPlatforms();
+
+/* ── 유틸 ───────────────────────────────── */
+function decode(s){
+  if(!s) return "";
+  const el=document.createElement("textarea");
+  el.innerHTML=s; return el.value;
+}
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function safe(s){return esc(decode(s));}
+
+/* ── 번역 ───────────────────────────────── */
+// Lingva Translate 인스턴스 (순서대로 시도)
+const LINGVA = [
+  "https://lingva.ml",
+  "https://translate.plausibility.cloud",
+  "https://lingva.pussthecat.org",
+];
+async function trOne(text,from,to="ko"){
+  if(!text||!text.trim()) return "";
+  const q=encodeURIComponent(text.slice(0,500));
+  // Lingva 인스턴스 순서대로 시도
+  for(const base of LINGVA){
+    try{
+      const r=await fetch(`${base}/api/v1/${from}/${to}/${q}`);
+      if(!r.ok) continue;
+      const d=await r.json();
+      if(d.translation) return decode(d.translation);
+    }catch{}
+  }
+  // 최후 fallback: MyMemory
+  try{
+    const r=await fetch(`https://api.mymemory.translated.net/get?q=${q}&langpair=${from}|${to}`);
+    const d=await r.json();
+    const t=d.responseData?.translatedText||"";
+    if(t && !t.includes("MYMEMORY WARNING")) return decode(t);
+  }catch{}
+  return decode(text); // 번역 실패 시 원문 반환
+}
+async function translateAll(trends,lang){
+  setPhase(`🌐 한국어로 번역 중...`);
+  return Promise.all(trends.map(async t=>{
+    const kw=await trOne(t.keyword,lang);
+    const news=await Promise.all(t.news.map(async n=>({
+      ...n, title:n.title?await trOne(n.title,lang):""
+    })));
+    return{...t,keyword:kw,news};
+  }));
+}
+
+/* ── Google Trends RSS ──────────────────── */
+function parseGoogleRSS(xml){
+  const get=(b,tag)=>{
+    const m=b.match(new RegExp(`<(?:[\\w]+:)?${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></(?:[\\w]+:)?${tag}>|<(?:[\\w]+:)?${tag}[^>]*>([\\s\\S]*?)</(?:[\\w]+:)?${tag}>`));
+    return decode(m?(m[1]||m[2]||"").trim():"");
+  };
+  const getAll=(b,tag)=>{
+    const re=new RegExp(`<(?:[\\w]+:)?${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></(?:[\\w]+:)?${tag}>|<(?:[\\w]+:)?${tag}[^>]*>([\\s\\S]*?)</(?:[\\w]+:)?${tag}>`,"g");
+    const res=[];let m; while((m=re.exec(b))!==null) res.push(decode((m[1]||m[2]||"").trim()));
+    return res;
+  };
+  return(xml.match(/<item>([\s\S]*?)<\/item>/g)||[]).slice(0,10).map((item,i)=>{
+    const titles=getAll(item,"news_item_title"),sources=getAll(item,"news_item_source"),urls=getAll(item,"news_item_url");
+    return{rank:i+1,keyword:get(item,"title"),volume:get(item,"approx_traffic")||"급상승",
+      news:titles.slice(0,2).map((t,j)=>({title:t,source:sources[j]||"",url:urls[j]||""})).filter(n=>n.title)};
+  }).filter(t=>t.keyword);
+}
+async function fetchGoogle(co,lang){
+  setPhase("🔍 Google Trends 검색 중...");
+  const res=await fetch(`${PROXY}?url=${encodeURIComponent("https://trends.google.com/trending/rss?geo="+co)}`);
+  if(!res.ok) throw new Error(`Google Trends 오류 (${res.status})`);
+  const txt=await res.text();
+  if(!txt.includes("<item>")) throw new Error("Google Trends 결과 없음");
+  let trends=parseGoogleRSS(txt);
+  if(co!=="KR") trends=await translateAll(trends,lang);
+  return trends;
+}
+
+/* ── Reddit ─────────────────────────────── */
+async function fetchReddit(co){
+  const c=COUNTRIES.find(x=>x.code===co);
+  setPhase(`🔺 Reddit r/${c.reddit} 검색 중...`);
+  // Worker 경유 — 로컬 파일에서 직접 호출 시 차단 방지
+  const url=`https://www.reddit.com/r/${c.reddit}/hot.json?limit=15&raw_json=1`;
+  const res=await fetch(`${PROXY}?url=${encodeURIComponent(url)}`);
+  if(!res.ok) throw new Error(`Reddit 오류 (${res.status})`);
+  const data=await res.json();
+  return(data.data?.children||[]).filter(p=>!p.data.stickied).slice(0,10).map((p,i)=>({
+    rank:i+1,
+    keyword:decode(p.data.title),
+    volume:`${p.data.score.toLocaleString()} pts`,
+    news:[{
+      title:decode(p.data.selftext?p.data.selftext.slice(0,180):p.data.title),
+      source:`r/${p.data.subreddit}`,
+      url:`https://reddit.com${p.data.permalink}`,
+    }],
+  }));
+}
+
+/* ── Bing News ──────────────────────────── */
+function parseBingRSS(xml){
+  const get=(b,tag)=>{
+    const m=b.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>|<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
+    return decode(m?(m[1]||m[2]||"").trim():"");
+  };
+  return(xml.match(/<item>([\s\S]*?)<\/item>/g)||[]).slice(0,10).map((item,i)=>({
+    rank:i+1,
+    keyword:get(item,"title"),
+    volume:get(item,"pubDate")||"최신",
+    news:[{title:get(item,"description"),source:"Bing News",url:get(item,"link")}].filter(n=>n.title),
+  })).filter(t=>t.keyword);
+}
+async function fetchBing(co,lang){
+  const c=COUNTRIES.find(x=>x.code===co);
+  setPhase("📰 Bing News 검색 중...");
+  // 국가별 검색어로 결과 보장
+  const q={KR:"한국 뉴스",US:"US news",SA:"Saudi Arabia news",AE:"UAE news",EG:"Egypt news"}[co]||"news";
+  const url=`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=RSS&mkt=${c.bing}`;
+  const res=await fetch(`${PROXY}?url=${encodeURIComponent(url)}`);
+  if(!res.ok) throw new Error(`Bing News 오류 (${res.status})`);
+  const txt=await res.text();
+  if(!txt.includes("<item>")) throw new Error("Bing News 결과 없음");
+  let trends=parseBingRSS(txt);
+  if(TRANSLATE_LANGS.has(lang)) trends=await translateAll(trends,lang);
+  return trends;
+}
+
+/* ── 메인 실행 ──────────────────────────── */
+async function run(){
+  if(ST.loading) return;
+  ST.loading=true;
+  const btn=document.getElementById("go");
+  btn.disabled=true; btn.innerHTML=`<span class="sp"></span> 검색 중...`;
+  const pf=document.getElementById("pfill");
+  const pl=document.getElementById("pl");
+  const plat=PLATFORMS.find(p=>p.id===ST.platform);
+  pf.style.background=`linear-gradient(90deg,${plat.color},${plat.color}99)`;
+  pl.style.color=plat.color;
+  document.getElementById("prog").style.display="block";
+  document.getElementById("eb").style.display="none";
+  document.getElementById("stbar").style.display="none";
+  document.getElementById("emp").style.display="none";
+  renderSkel();
+
+  const country=COUNTRIES.find(c=>c.code===ST.co);
+  const ctrl=new AbortController();
+  const tim=setTimeout(()=>ctrl.abort(),25000);
+
+  try{
+    let trends;
+    if(ST.platform==="google") trends=await fetchGoogle(ST.co,country.lang);
+    else if(ST.platform==="reddit") trends=await fetchReddit(ST.co);
+    else trends=await fetchBing(ST.co,country.lang);
+    clearTimeout(tim);
+
+    const now=new Date();
+    document.getElementById("sub").textContent=
+      `${plat.label} · ${country.label} · ${now.toLocaleTimeString("ko-KR")} 갱신`;
+    ST.hist.unshift({country:country.label,platform:plat.label,
+      time:now.toLocaleTimeString("ko-KR"),date:now.toLocaleDateString("ko-KR"),trends,platColor:plat.color});
+    if(ST.hist.length>15) ST.hist.pop();
+
+    renderCards(trends,plat);
+    document.getElementById("t1").textContent=trends[0]?.keyword||"";
+    document.getElementById("tot").textContent=trends.length;
+    document.getElementById("src-label").innerHTML=
+      `<span style="color:${plat.color};font-weight:700">${plat.label}</span> · ${plat.hint}`;
+    document.getElementById("stbar").style.display="flex";
+  }catch(e){
+    clearTimeout(tim);
+    document.getElementById("grid").innerHTML="";
+    showErr("⚠️ "+(e.name==="AbortError"?"요청 시간 초과 (25초)":e.message));
+    document.getElementById("emp").style.display="block";
+  }finally{
+    ST.loading=false; btn.disabled=false; btn.innerHTML="🔍 분석 시작";
+    document.getElementById("prog").style.display="none";
+  }
+}
+
+function setPhase(m){document.getElementById("pl").textContent=m;}
+
+function renderSkel(){
+  document.getElementById("grid").innerHTML=Array.from({length:10}).map((_,i)=>`
+    <div class="sk" style="animation-delay:${i*.04}s">
+      <div style="padding:14px 16px 12px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #1a2540">
+        <div class="skb" style="width:32px;height:32px;border-radius:9px;flex-shrink:0"></div>
+        <div style="flex:1"><div class="skb" style="height:14px;border-radius:4px;margin-bottom:8px"></div>
+        <div class="skb" style="height:9px;width:40%;border-radius:4px"></div></div>
+      </div>
+      <div style="padding:13px 16px">
+        <div class="skb" style="height:12px;border-radius:4px;margin-bottom:7px"></div>
+        <div class="skb" style="height:12px;width:70%;border-radius:4px"></div>
+      </div>
+    </div>`).join("");
+}
+
+function renderCards(trends,plat){
+  document.getElementById("grid").innerHTML=trends.map((t,i)=>{
+    const isTop=i<3,col=isTop?RC[i]:"#475569",bg=isTop?RC[i]+"18":"#1e293b";
+    const newsHtml=t.news.length?t.news.map((n,j)=>`
+      <div class="news-item">
+        <div class="news-num">${j+1}</div>
+        <div class="news-body">
+          <div class="news-title">${safe(n.title)}</div>
+          <div class="news-meta">
+            ${n.source?`<span class="news-src">📰 ${safe(n.source)}</span>`:""}
+            ${n.url?`<a class="news-link" href="${esc(n.url)}" target="_blank" rel="noreferrer">자세히 →</a>`:""}
+          </div>
+        </div>
+      </div>`).join(`<div class="divider"></div>`)
+    :`<div class="no-news">관련 정보가 없습니다.</div>`;
+
+    return`<div class="card" style="animation-delay:${i*.04}s">
+      <div class="card-header">
+        <div class="rk-wrap">
+          <div class="rk" style="background:${bg};color:${col}">${t.rank}</div>
+          ${isTop?`<div class="medal">${MEDALS[i]}</div>`:""}
+        </div>
+        <div class="kw-wrap">
+          <div class="kw">${safe(t.keyword)}</div>
+          <div class="meta-row">
+            <span class="vol-badge">🔥 ${safe(t.volume)}</span>
+            <span class="src-badge" style="background:${plat.color}22;color:${plat.color}">${plat.label}</span>
+          </div>
+        </div>
+      </div>
+      <div class="ins-wrap">${newsHtml}</div>
+    </div>`;
+  }).join("");
+}
+
+function stab(t){
+  document.querySelectorAll(".tab").forEach((b,i)=>b.classList.toggle("on",(i===0)===(t==="live")));
+  document.getElementById("lp").style.display=t==="live"?"block":"none";
+  document.getElementById("hp").style.display=t==="hist"?"block":"none";
+  if(t==="hist") renderHist();
+}
+function selC(code){if(!ST.loading){ST.co=code;renderCountries();}}
+function selP(id){if(!ST.loading){ST.platform=id;renderPlatforms();}}
+
+function renderHist(){
+  const el=document.getElementById("hl");
+  if(!ST.hist.length){el.innerHTML=`<div class="emp"><div class="emp-icon">📂</div><div class="emp-text">기록이 없습니다</div></div>`;return;}
+  el.innerHTML=ST.hist.map(h=>`
+    <div class="hi">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div>
+          <span style="font-weight:700;color:#f1f5f9;font-size:14px">${h.country}</span>
+          <span style="font-size:11px;color:${h.platColor};margin-left:8px;font-weight:600">${h.platform}</span>
+        </div>
+        <span style="font-size:11px;color:#475569">${h.date} ${h.time}</span>
+      </div>
+      <div>${h.trends.map((t,i)=>`<span class="ht" style="color:${i<3?RC[i]:"#94a3b8"}">${t.rank}. ${safe(t.keyword)}</span>`).join("")}</div>
+    </div>`).join("");
+}
+
+function showErr(m){const e=document.getElementById("eb");e.textContent=m;e.style.display="block";}
+</script></body></html>
